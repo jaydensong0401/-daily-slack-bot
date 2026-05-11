@@ -1,0 +1,27 @@
+name: Daily Weather Slack Bot
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 8시 (UTC 23:00)
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-weather-bot:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run Weather Bot
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+      run: python main_weather.py
