@@ -1,20 +1,37 @@
-from pytrends.request import TrendReq
+import requests
+import xml.etree.ElementTree as ET
 
 def get_trends_data():
+    # 구글 트렌드 한국 지역 공식 RSS 피드 주소
+    url = "https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR"
+    
+    # 봇 차단을 막기 위한 브라우저 위장 헤더
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/rss+xml, application/xml, text/xml"
+    }
+    
     try:
-        # pytrends 설정 (한국 지역: KR, 시간대: 540은 KST)
-        pytrends = TrendReq(hl='ko-KR', tz=540)
+        response = requests.get(url, headers=headers)
         
-        # 실시간 인기 검색어(Trending Searches) 가져오기
-        # 'south_korea' 지역 설정
-        df = pytrends.trending_searches(pn='south_korea')
+        # 만약 XML이 아니라 차단 페이지(HTML)가 떴을 경우를 확인
+        if response.status_code != 200:
+            print(f"❌ 접속 실패: 상태 코드 {response.status_code}")
+            return {"rising": []}
+            
+        # XML(RSS) 데이터 파싱
+        root = ET.fromstring(response.text)
         
-        # 리스트로 변환
-        results = {"rising": df[0].tolist()}
-        
-        print(f"✅ pytrends 수집 완료: {len(results['rising'])}개 항목")
+        trends_list = []
+        # 각 트렌드 항목(item)에서 제목(title)만 추출
+        for item in root.findall('.//item'):
+            title = item.find('title').text
+            if title:
+                trends_list.append(title)
+                
+        results = {"rising": trends_list}
         return results
         
     except Exception as e:
-        print(f"❌ pytrends 에러 발생: {e}")
+        print(f"❌ RSS 수집 실패: {e}")
         return {"rising": []}
