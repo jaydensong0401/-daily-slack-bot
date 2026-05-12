@@ -12,8 +12,8 @@ def get_weather_data(city="Seoul"):
     lon = 126.9436
     
     # One Call API 호출 (시간별/일별 예보 포함)
-    # 만약 401 에러가 나면 2.5를 3.0으로 수정해 보세요.
-    url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely&appid={api_key}&units=metric&lang=kr"
+    # 3.0 버전 사용 (결제 연동된 계정 필수)
+    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&appid={api_key}&units=metric&lang=kr"
     
     try:
         response = requests.get(url)
