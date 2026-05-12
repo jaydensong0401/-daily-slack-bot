@@ -1,38 +1,71 @@
 import requests
 import os
+from datetime import datetime
 
 def get_weather_data(city="Seoul"):
-    # GitHub Secrets에 등록할 WEATHER_API_KEY 사용
     api_key = os.environ.get("WEATHER_API_KEY")
     if not api_key:
         return "❌ Weather API Key가 설정되지 않았습니다."
         
-    # 'Gwanak-gu'로 검색 (OpenWeatherMap 지원)
-    url = f"https://api.openweathermap.org/data/2.5/weather?q=Gwanak-gu,KR&appid={api_key}&units=metric&lang=kr"
+    # 관악구 위도 및 경도
+    lat = 37.4654
+    lon = 126.9436
+    
+    # One Call API 호출 (시간별/일별 예보 포함)
+    # 만약 401 에러가 나면 2.5를 3.0으로 수정해 보세요.
+    url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely&appid={api_key}&units=metric&lang=kr"
     
     try:
         response = requests.get(url)
         data = response.json()
         
         if response.status_code == 200:
-            weather_desc = data['weather'][0]['description']
-            temp = data['main']['temp']
-            feels_like = data['main']['feels_like']
-            humidity = data['main']['humidity']
+            # 1. 현재 날씨
+            current = data['current']
+            current_desc = current['weather'][0]['description']
+            temp = current['temp']
+            feels_like = current['feels_like']
+            humidity = current['humidity']
             
             emoji = "🌡️"
-            if "비" in weather_desc: emoji = "☔"
-            elif "구름" in weather_desc: emoji = "☁️"
-            elif "맑음" in weather_desc: emoji = "☀️"
-            elif "눈" in weather_desc: emoji = "❄️"
+            if "비" in current_desc: emoji = "☔"
+            elif "구름" in current_desc: emoji = "☁️"
+            elif "맑음" in current_desc: emoji = "☀️"
+            elif "눈" in current_desc: emoji = "❄️"
             
+            # 2. 시간별 예보 (향후 3시간 요약)
+            hourly_forecast = ""
+            for i in range(1, 4): 
+                hour_data = data['hourly'][i]
+                dt = datetime.fromtimestamp(hour_data['dt'])
+                hour_str = dt.strftime("%H시")
+                h_temp = round(hour_data['temp'], 1)
+                h_desc = hour_data['weather'][0]['description']
+                hourly_forecast += f"  - {hour_str}: {h_temp}°C ({h_desc})\n"
+                
+            # 3. 일별 예보 (내일~글피 요약)
+            daily_forecast = ""
+            for i in range(1, 4): 
+                day_data = data['daily'][i]
+                dt = datetime.fromtimestamp(day_data['dt'])
+                day_str = dt.strftime("%m/%d")
+                d_temp_min = round(day_data['temp']['min'], 1)
+                d_temp_max = round(day_data['temp']['max'], 1)
+                d_desc = day_data['weather'][0]['description']
+                daily_forecast += f"  - {day_str}: {d_temp_min}°C / {d_temp_max}°C ({d_desc})\n"
+
             result = (
-                f"{emoji} *오늘의 서울시 관악구 날씨 리포트 알려줄게!!*\n\n"
-                f"• 상태: {weather_desc}\n"
-                f"• 현재 온도: {temp}°C\n"
-                f"• 체감 온도: {feels_like}°C\n"
-                f"• 습도: {humidity}%\n"
-                f"\n오늘도 화이팅해 민제야!! 🍀"
+                f"{emoji} *오늘 서울 관악구 날씨 알려줄게!!*\n\n"
+                f"*📍 오늘의 날씨 잘보고 옷, 우산 잘챙겨 입어!!*\n"
+                f"• 오늘의 날씨는{current_desc}\n"
+                f"• 밖 온도는 {temp}°C\n"
+                f"• 체감 온도는 {feels_like}°C\n"
+                f"• 습도는 {humidity}%\n\n"
+                f"*🕒 3시간 뒤 날씨는 이래!!*\n"
+                f"{hourly_forecast}\n"
+                f"*📅 일별 예보 잘보고 우산 챙겨!!*\n"
+                f"{daily_forecast}\n"
+                f"오늘도 화이팅하자ㅏㅏ!!🍀"
             )
             return result
         else:
