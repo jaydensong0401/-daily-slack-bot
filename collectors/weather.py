@@ -27,12 +27,12 @@ def get_weather_data(city="Seoul"):
             elif "눈" in weather_desc: emoji = "❄️"
             
             result = (
-                f"{emoji} *오늘의 서울시 관악구 날씨 리포트*\n\n"
+                f"{emoji} *오늘의 서울시 관악구 날씨 리포트 알려줄게!!*\n\n"
                 f"• 상태: {weather_desc}\n"
                 f"• 현재 온도: {temp}°C\n"
                 f"• 체감 온도: {feels_like}°C\n"
                 f"• 습도: {humidity}%\n"
-                f"\n행복한 하루 되세요! 지우님! 🍀"
+                f"\n오늘도 화이팅해 민제야!! 🍀"
             )
             return result
         else:
