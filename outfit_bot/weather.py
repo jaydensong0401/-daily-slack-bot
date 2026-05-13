@@ -2,9 +2,10 @@ import requests
 import os
 
 def get_weather_data(city="Seoul"):
-    api_key = os.environ.get("OPENWEATHER_API_KEY")
+    # 기존에 사용하던 WEATHER_API_KEY와 새로운 이름을 모두 지원하도록 수정
+    api_key = os.environ.get("OPENWEATHER_API_KEY") or os.environ.get("WEATHER_API_KEY")
     if not api_key:
-        raise ValueError("OPENWEATHER_API_KEY environment variable is not set.")
+        raise ValueError("Weather API Key (OPENWEATHER_API_KEY or WEATHER_API_KEY) environment variable is not set.")
     
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=kr"
     
